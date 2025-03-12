@@ -1,1 +1,8 @@
-# bone_marrow_transplant
+# MEDICAL DECISION SUPPORT APPLICATION PREDICTING SUCCESS OF PEDIATRIC BONE MARROW TRANSPLANTS WITH EXPLAINABLE ML (SHAP)
+
+## Project Overview
+This project involves...
+
+## Steps Completed
+
+### Preliminary Data Analysis
