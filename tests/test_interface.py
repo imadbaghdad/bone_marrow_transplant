@@ -9,7 +9,7 @@ from pathlib import Path
 MODEL_PATH = Path(__file__).parent.parent / 'models' / 'rf_model_compressed.joblib'
 EXPLAINER_PATH = Path(__file__).parent.parent / 'models' / 'shap_explainer_new.joblib'
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def model_and_explainer():
     """Load model and explainer for testing"""
     model = joblib.load(MODEL_PATH)
@@ -87,10 +87,10 @@ def test_generate_shap_explanation(model_and_explainer, sample_input_data):
     shap_values = explainer.shap_values(df, check_additivity=False)
     
     # Verify SHAP values format
-    assert isinstance(shap_values, list), "SHAP values should be a list for binary classification"
-    assert len(shap_values) == 2, "Should have SHAP values for both classes"
-    assert shap_values[0].shape[0] == 1, "Should have one sample"
-    assert shap_values[0].shape[1] == len(sample_input_data), "Should have values for all features"
+    assert isinstance(shap_values, np.ndarray), "SHAP values should be numpy array"
+    assert shap_values.ndim == 3, "Should have 3 dimensions for binary classification"
+    assert shap_values.shape[0] == 1, "Should have one sample"
+    assert shap_values.shape[2] == 2, "Should have values for both classes"
 
 def test_input_data_preprocessing(sample_input_data):
     """Test input data preprocessing"""
@@ -117,8 +117,8 @@ def test_feature_importance_plot(model_and_explainer, sample_input_data):
     plt.clf()
     fig, ax = plt.subplots(figsize=(12, 8))
     
-    # Get importance values
-    importance_values = shap_values[1][0]
+    # Get importance values for positive class (second column)
+    importance_values = shap_values[0, :, 1]  # Changed indexing
     feature_names = df.columns
     
     # Sort and plot
@@ -130,11 +130,14 @@ def test_feature_importance_plot(model_and_explainer, sample_input_data):
     assert len(feature_names) == len(importance_values), "Should have importance value for each feature"
     plt.close()
 
-def test_error_handling(sample_input_data):
+def test_error_handling(model_and_explainer, sample_input_data):
     """Test error handling for invalid inputs"""
+    model, _ = model_and_explainer
+    
     # Test with missing feature
     invalid_data = sample_input_data.copy()
     del invalid_data['Recipientage']
+    df_invalid = pd.DataFrame([invalid_data])
     
     with pytest.raises(KeyError):
-        pd.DataFrame([invalid_data])[model_and_explainer[0].feature_names_in_]
+        df_invalid[model.feature_names_in_]

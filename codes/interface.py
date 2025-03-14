@@ -52,15 +52,9 @@ def generate_shap_explanation(data):
         plt.clf()  # Clear any existing plots
         fig, ax = plt.subplots(figsize=(12, 8))
         
-        # Get importance values
-        if isinstance(shap_values, list):
-            shap_values = shap_values[1]  # Use SHAP values for the positive class
-        
-        if shap_values.ndim == 3:
-            importance_values = shap_values[0][:, 1]  # Use SHAP values for the positive class
-        else:
-            importance_values = shap_values[0] if shap_values.ndim > 1 else shap_values
-            
+        # Get importance values for positive class (index 1)
+        # SHAP values shape is (samples, features, classes)
+        importance_values = shap_values[0, :, 1]
         feature_names = df.columns
         
         # Sort by absolute importance
