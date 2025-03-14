@@ -94,10 +94,11 @@ def test_generate_shap_explanation(model_and_explainer, sample_input_data):
     shap_values = explainer.shap_values(df, check_additivity=False)
     
     # Verify SHAP values format
-    assert isinstance(shap_values, np.ndarray), "SHAP values should be numpy array"
-    assert shap_values.ndim == 3, "Should have 3 dimensions for binary classification"
-    assert shap_values.shape[0] == 1, "Should have one sample"
-    assert shap_values.shape[2] == 2, "Should have values for both classes"
+    assert isinstance(shap_values, list), "SHAP values should be a list for binary classification"
+    assert len(shap_values) == 2, "Should have values for both classes"
+    assert isinstance(shap_values[0], np.ndarray), "Each class's values should be numpy array"
+    assert shap_values[0].shape[0] == 1, "Should have one sample"
+    assert shap_values[0].shape[1] == len(df.columns), "Should have values for all features"
 
 def test_input_data_preprocessing(sample_input_data):
     """Test input data preprocessing"""
@@ -124,17 +125,23 @@ def test_feature_importance_plot(model_and_explainer, sample_input_data):
     plt.clf()
     fig, ax = plt.subplots(figsize=(12, 8))
     
-    # Get importance values for positive class (second column)
-    importance_values = shap_values[0, :, 1]  # Changed indexing
+    # Get importance values for positive class (index 1)
+    importance_values = np.abs(shap_values[1][0])  # Get absolute values for first sample
     feature_names = df.columns
     
-    # Sort and plot
-    sorted_idx = np.argsort(np.abs(importance_values))
+    # Sort by absolute importance
+    sorted_idx = np.argsort(importance_values)
     feature_names = np.array(feature_names)[sorted_idx]
     importance_values = importance_values[sorted_idx]
     
+    # Create bar plot
+    y_pos = np.arange(len(feature_names))
+    ax.barh(y_pos, importance_values)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(feature_names)
+    
     # Verify plot elements
-    assert len(feature_names) == len(importance_values), "Should have importance value for each feature"
+    assert len(ax.patches) == len(feature_names), "Should have one bar per feature"
     plt.close()
 
 def test_error_handling(model_and_explainer, sample_input_data):
