@@ -595,56 +595,189 @@ Un fichier .joblib stockant le modèle entraîné.
 
 
 
+## **Explication du code intitulé "interface.py" qui permet de créer notre interface**
 
+### **1. Importation des bibliothèques**
 
+import streamlit as st
+import pandas as pd
+import numpy as np
+import joblib
+import shap
+import matplotlib.pyplot as plt
 
+**Explication :**
 
+streamlit : Permet de créer une application web interactive.
+pandas : Utilisé pour manipuler les données tabulaires (format DataFrame).
+numpy : Pour les opérations mathématiques et manipulation des tableaux.
+joblib : Sert à charger le modèle de Machine Learning et l’explainer SHAP.
+shap : Utilisé pour expliquer les décisions du modèle (interprétabilité).
+matplotlib.pyplot : Permet de tracer des graphiques, notamment pour SHAP.
 
+### **2. Chargement du modèle et de l’explainer SHAP**
 
+try:
+    model = joblib.load(r'C:\Users\imadb\Documents\GitHub\bone_marrow_transplant\models\rf_model_compressed.joblib')
+    explainer = joblib.load(r'C:\Users\imadb\Documents\GitHub\bone_marrow_transplant\models\shap_explainer_new.joblib')
+except FileNotFoundError:
+    st.error("Model files not found. Please ensure the model files are in the correct location.")
+    st.stop()
 
+**Explication :**
 
+joblib.load() charge le modèle de Machine Learning (rf_model_compressed.joblib) et l’explainer SHAP (shap_explainer_new.joblib).
+Gestion d'erreur : Si les fichiers ne sont pas trouvés, un message d’erreur est affiché avec st.error(), et st.stop() arrête l'exécution de l'application.
 
+### **3. Fonction de prédiction**
 
+def predict_success_rate(data):
+    df = pd.DataFrame([data])
+    prediction = model.predict(df)
+    prediction_proba = model.predict_proba(df)
+    return prediction, prediction_proba
 
+**Explication :**
 
+Convertit les données d'entrée (data, un dictionnaire) en un DataFrame pandas.
+Utilise model.predict() pour obtenir une prédiction (succès ou échec de la greffe).
+model.predict_proba() retourne les probabilités de chaque classe (succès ou échec).
+Renvoie :
+prediction : 0 ou 1 (succès/échec).
+prediction_proba : Probabilité associée à chaque classe.
 
+### **4. Explication SHAP**
 
+def generate_shap_explanation(data):
+    try:
+        df = pd.DataFrame([data])
+        df = df[model.feature_names_in_]  
+        shap_values = explainer.shap_values(df, check_additivity=False)
+        
+        plt.clf()
+        fig, ax = plt.subplots(figsize=(12, 8))
+        
+        importance_values = shap_values[0, :, 1]
+        feature_names = df.columns
+        
+        sorted_idx = np.argsort(np.abs(importance_values))
+        feature_names = np.array(feature_names)[sorted_idx]
+        importance_values = importance_values[sorted_idx]
+        
+        y_pos = np.arange(len(feature_names))
+        colors = ['#ff4b4b' if v < 0 else '#2e8b57' for v in importance_values]
+        ax.barh(y_pos, importance_values, color=colors)
+        
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(feature_names)
+        ax.set_xlabel('SHAP Impact')
+        ax.set_title('Feature Importance Analysis')
+        ax.grid(True, axis='x', linestyle='--', alpha=0.3)
+        
+        plt.tight_layout()
+        return True, fig
+        
+    except Exception as e:
+        return False, f"Error generating explanation: {str(e)} ({type(e).__name__})"
 
+**Explication :**
 
+Conversion des données en DataFrame et réorganisation selon les features du modèle.
+Calcul des SHAP values avec explainer.shap_values(df, check_additivity=False).
 
+**Visualisation :**
 
+Trie les features par importance.
+Génère un bar plot où les valeurs positives et négatives sont colorées différemment.
+Gestion des erreurs : En cas d’échec, renvoie un message d’erreur.
 
+### **5. Configuration de la page**
 
+st.set_page_config(
+    page_title="Bone Marrow Transplant Prediction",
+    page_icon="🏥",
+    layout="wide"
+)
 
+**Explication :**
 
+Définit le titre, l'icône et la mise en page large pour Streamlit.
 
+### **6. Personnalisation CSS**
 
+st.markdown("""
+    <style>
+    .main { padding: 2rem; }
+    .stButton>button { width: 100%; margin-top: 1rem; }
+    </style>
+""", unsafe_allow_html=True)
 
+**Explication :**
 
+Ajoute du CSS personnalisé pour améliorer l’apparence des boutons et marges.
 
+### **7. Barre latérale pour la saisie des données**
 
+st.sidebar.title("Patient Information")
+st.sidebar.markdown("---")
 
+**Explication :**
 
+Ajoute un titre et une ligne de séparation dans la barre latérale.
 
+### **8. Formulaire des informations patient**
 
+age = st.number_input("Age (years)", min_value=0, max_value=18, value=5)
+gender = st.selectbox("Gender", ["Male", "Female"])
+weight = st.number_input("Weight (kg)", min_value=1, max_value=100, value=20)
 
+disease_status = st.selectbox("Disease Status", ["Early", "Intermediate", "Advanced"])
+donor_age = st.number_input("Donor Age", min_value=0, max_value=100, value=30)
+donor_relation = st.selectbox("Donor Relation", ["Sibling", "Parent", "Child", "Other Related", "Unrelated"])
 
+**Explication :**
 
+Les utilisateurs remplissent l’âge, le poids, le statut de la maladie, etc.
 
+### **9. Prédiction et affichage des résultats**
 
+if st.button('Generate Prediction'):
+    try:
+        prediction, prediction_proba = predict_success_rate(input_data)
+        outcome = "Success" if prediction[0] == 1 else "Failure"
+        success_rate = prediction_proba[0][1]
+        
+        st.metric("Predicted Outcome", outcome)
+        st.metric("Success Probability", f"{success_rate:.1%}")
+        
+        with st.expander("See Feature Importance"):
+            success, result = generate_shap_explanation(input_data)
+            if success:
+                st.pyplot(result)
+            else:
+                st.error(result)
+                
+    except Exception as e:
+        st.error(f"An error occurred during prediction: {str(e)}")
 
+**Explication :**
 
+Lorsque l'utilisateur clique sur le bouton, la fonction predict_success_rate() est appelée.
+Affiche le résultat de la prédiction sous forme de métrique.
+Ajoute une explication SHAP dans une section repliable (st.expander()).
 
+### **10. Footer**
 
+st.markdown("---")
+st.markdown("""
+    <div style='text-align: center'>
+        <small>This tool is for research purposes only. Always consult with medical professionals for clinical decisions.</small>
+    </div>
+""", unsafe_allow_html=True)
 
+**Explication :**
 
-
-
-
-
-
-
-
+Ajoute un message de mise en garde en bas de la page.
 
 
 
