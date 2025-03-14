@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9"]  # Changed from 3.12.4 to 3.9 for better compatibility
+        python-version: ["3.9"]
 
     steps:
     - uses: actions/checkout@v2
@@ -23,16 +23,19 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     
-    - name: Install setuptools
+    - name: Install base dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install setuptools wheel
     
-    - name: Install dependencies
+    - name: Install requirements
       run: |
-        pip install numpy==1.24.3
-        pip install pandas==1.5.3
+        pip install 'scikit-learn==1.4.2'  # Install specific version first
         pip install -r tests/requirements.txt
+        
+    - name: List dependencies
+      run: |
+        pip list  # For debugging
         
     - name: Prepare test environment
       run: |
