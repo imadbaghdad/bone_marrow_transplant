@@ -27,15 +27,23 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install setuptools wheel
-    
-    - name: Install requirements
+
+    - name: Install core dependencies in order
       run: |
-        pip install 'scikit-learn==1.4.2'  # Install specific version first
+        pip install numpy==1.24.3
+        pip install pandas==1.5.3
+        pip install scikit-learn==1.4.2
+        pip install numba==0.57.1
+        pip install llvmlite==0.40.1
+        pip install shap==0.44.0
+    
+    - name: Install remaining requirements
+      run: |
         pip install -r tests/requirements.txt
         
-    - name: List dependencies
+    - name: List installed packages
       run: |
-        pip list  # For debugging
+        pip freeze
         
     - name: Prepare test environment
       run: |
@@ -46,5 +54,6 @@ jobs:
       env:
         MODEL_PATH: temp_models/rf_model_compressed.joblib
         EXPLAINER_PATH: temp_models/shap_explainer_new.joblib
+        PYTHONPATH: ${{ github.workspace }}
       run: |
         python -m pytest tests/ -v
