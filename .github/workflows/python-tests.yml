@@ -15,7 +15,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+      with:
+        lfs: true
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -26,16 +28,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r tests/requirements.txt
         
-    - name: Create directories
+    - name: Prepare test environment
       run: |
-        mkdir -p models
-        mkdir -p visualisations
-        
-    - name: Copy model files
-      run: |
-        cp models/rf_model_compressed.joblib models/
-        cp models/shap_explainer_new.joblib models/
-        
+        mkdir -p temp_models
+        cp models/*.joblib temp_models/
+      
     - name: Run tests
+      env:
+        MODEL_PATH: temp_models/rf_model_compressed.joblib
+        EXPLAINER_PATH: temp_models/shap_explainer_new.joblib
       run: |
         python -m pytest tests/ -v
