@@ -266,6 +266,389 @@ Un fichier CSV contenant les données prêtes pour l'analyse ou le machine learn
 
 
 
+## **Explication des étapes suivies dans le notebook "eda2.ipynb"**
+
+### **1. Importation des bibliothèques et chargement des données**
+
+import pandas as pd
+from scipy.io import arff
+
+**Chargement du fichier ARFF**
+
+data, meta = arff.loadarff("../data/bone-marrow.arff")
+
+**Conversion en DataFrame Pandas**
+
+df = pd.DataFrame(data)
+
+**Affichage des premières lignes**
+
+df.head()
+
+ **Explication**
+
+pandas est importé pour manipuler les données sous forme de tableau.
+scipy.io.arff est utilisé pour charger des fichiers .arff, format souvent utilisé pour les datasets en machine learning.
+arff.loadarff() charge les données et les métadonnées.
+df = pd.DataFrame(data) transforme les données en DataFrame.
+df.head() affiche les 5 premières lignes pour visualiser la structure des données.
+
+**Résultat attendu**
+
+Un aperçu du dataset avec ses premières lignes et colonnes.
+
+### **2. Vérification des valeurs manquantes**
+
+**Vérification des valeurs manquantes**
+
+missing_values = df.isnull().sum()
+print("Valeurs manquantes par colonne:")
+print(missing_values)
+
+ **Explication**
+
+df.isnull().sum() compte le nombre de valeurs NaN dans chaque colonne.
+
+**Résultat attendu**
+
+Une liste affichant les colonnes qui contiennent des valeurs manquantes et leur nombre.
+
+### **3. Visualisation des valeurs manquantes**
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+**Heatmap des valeurs manquantes**
+
+plt.figure(figsize=(10, 6))
+sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
+plt.title('Carte des valeurs manquantes')
+plt.show()
+
+**Explication**
+
+sns.heatmap(df.isnull(), cbar=False, cmap='viridis') crée une carte thermique pour repérer les valeurs manquantes.
+
+**Résultat attendu**
+
+Un graphique où les cellules contenant des valeurs manquantes apparaissent en couleur.
+
+### **4. Remplacement des valeurs manquantes**
+
+**Remplissage avec la moyenne pour les colonnes numériques**
+
+df.fillna(df.mean(), inplace=True)
+
+**Explication**
+
+df.fillna(df.mean(), inplace=True) remplace les valeurs NaN par la moyenne des colonnes.
+
+**Résultat attendu**
+
+Toutes les valeurs manquantes des colonnes numériques sont remplacées.
+
+### **5. Vérification après correction**
+
+plt.figure(figsize=(10, 6))
+sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
+plt.title('Carte des valeurs manquantes après correction')
+plt.show()
+
+ **Explication**
+
+Une nouvelle heatmap est affichée pour s’assurer qu’il ne reste plus de valeurs manquantes.
+
+**Résultat attendu**
+
+Une heatmap vide, confirmant l’absence de valeurs manquantes.
+
+### **6. Analyse des statistiques descriptives**
+
+df.describe()
+
+**Explication**
+
+df.describe() génère des statistiques (moyenne, médiane, écart-type, min, max) pour chaque variable numérique.
+
+**Résultat attendu**
+
+Un tableau avec des statistiques résumant la distribution des données.
+
+### **7. Détection des valeurs extrêmes (outliers)**
+
+plt.figure(figsize=(15, 10))
+df.boxplot()
+plt.xticks(rotation=90)
+plt.title('Boxplot des colonnes numériques')
+plt.show()
+
+**Explication**
+
+df.boxplot() affiche des boxplots pour chaque colonne afin de visualiser les valeurs extrêmes.
+
+**Résultat attendu**
+
+Des points isolés en dehors des moustaches des boxplots indiquant la présence d'outliers.
+
+### **8. Suppression des outliers**
+
+from scipy.stats.mstats import winsorize
+
+df_winsorized = df.copy()
+for col in df.select_dtypes(include=['number']).columns:
+    df_winsorized[col] = winsorize(df[col], limits=[0.05, 0.05])
+
+**Explication**
+
+Winsorization est appliquée : les valeurs extrêmes sont remplacées par des valeurs plus proches des percentiles 5% et 95%.
+
+**Résultat attendu**
+
+Un dataset avec des valeurs extrêmes atténuées, sans modification excessive de la distribution.
+
+### **9. Vérification après Winsorization**
+
+plt.figure(figsize=(15, 10))
+df_winsorized.boxplot()
+plt.xticks(rotation=90)
+plt.title('Boxplot après Winsorization')
+plt.show()
+
+**Explication**
+
+Affichage des nouveaux boxplots après réduction des outliers.
+
+**Résultat attendu**
+
+Moins de valeurs extrêmes en dehors des moustaches des boxplots.
+
+### **10. Vérification de la distribution des variables**
+
+df.hist(figsize=(12, 10), bins=30)
+plt.suptitle('Histogrammes des variables')
+plt.show()
+
+**Explication**
+
+df.hist() crée des histogrammes pour voir la distribution de chaque variable.
+
+**Résultat attendu**
+
+Des graphiques montrant la forme des distributions (normale, asymétrique, multimodale...).
+
+### **11. Transformation des variables (normalisation)**
+
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+df_scaled = pd.DataFrame(scaler.fit_transform(df_winsorized), columns=df.columns)
+
+**Explication**
+
+Standardisation des données pour ramener toutes les variables à une même échelle (moyenne = 0, écart-type = 1).
+
+**Résultat attendu**
+
+Un dataset où toutes les variables sont transformées pour une meilleure comparabilité.
+
+### **12. Sauvegarde des données nettoyées**
+
+df_scaled.to_csv('../data/processed_data.csv', index=False)
+print("Les données nettoyées ont été enregistrées.")
+
+**Explication**
+
+df_scaled.to_csv() enregistre le dataset nettoyé et normalisé.
+
+**Résultat attendu**
+
+Un fichier .csv prêt pour l'analyse ou l'entraînement d'un modèle ML.
+
+### **13. Analyse de la corrélation entre les variables**
+
+plt.figure(figsize=(12, 8))
+sns.heatmap(df_scaled.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
+plt.title("Matrice de corrélation")
+plt.show()
+
+**Explication**
+
+df_scaled.corr() calcule les coefficients de corrélation de Pearson entre les variables.
+sns.heatmap() affiche une matrice de corrélation où les couleurs indiquent la force et la direction des relations.
+
+**Résultat attendu**
+
+Un heatmap montrant quelles variables sont fortement corrélées (+1 ou -1) et lesquelles sont indépendantes (≈0).
+
+### **14. Réduction de dimension avec PCA**
+
+from sklearn.decomposition import PCA
+
+pca = PCA(n_components=2)
+df_pca = pca.fit_transform(df_scaled)
+
+plt.scatter(df_pca[:, 0], df_pca[:, 1], alpha=0.5)
+plt.xlabel("Composante principale 1")
+plt.ylabel("Composante principale 2")
+plt.title("Projection PCA des données")
+plt.show()
+
+**Explication**
+
+PCA (Analyse en Composantes Principales) est utilisé pour réduire la dimensionnalité tout en conservant le maximum de variance.
+PCA(n_components=2) réduit les données à 2 dimensions.
+plt.scatter() visualise les données projetées sur ces deux axes principaux.
+
+**Résultat attendu**
+
+Un nuage de points représentant les données dans un espace à 2 dimensions, facilitant l'interprétation.
+
+### **15. Clustering avec K-Means**
+
+from sklearn.cluster import KMeans
+
+kmeans = KMeans(n_clusters=3, random_state=42)
+df_scaled["Cluster"] = kmeans.fit_predict(df_scaled)
+
+plt.scatter(df_pca[:, 0], df_pca[:, 1], c=df_scaled["Cluster"], cmap="viridis", alpha=0.5)
+plt.xlabel("Composante principale 1")
+plt.ylabel("Composante principale 2")
+plt.title("Clustering K-Means sur les données PCA")
+plt.show()
+
+**Explication**
+
+KMeans(n_clusters=3) applique un clustering en 3 groupes.
+fit_predict(df_scaled) assigne un cluster à chaque observation.
+plt.scatter() colore les points selon leur cluster.
+
+ **Résultat attendu**
+ 
+Un nuage de points coloré où les observations sont regroupées en trois clusters.
+
+### **16. Évaluation du clustering avec l’inertie**
+
+inertias = []
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(df_scaled)
+    inertias.append(kmeans.inertia_)
+
+plt.plot(range(1, 11), inertias, marker="o")
+plt.xlabel("Nombre de clusters")
+plt.ylabel("Inertie")
+plt.title("Méthode du coude pour déterminer K")
+plt.show()
+
+**Explication**
+
+On calcule l’inertie pour k entre 1 et 10.
+L’inertie mesure la compacité des clusters.
+La méthode du coude aide à déterminer le nombre optimal de clusters.
+
+**Résultat attendu**
+
+Un graphique en forme de coude où l’inertie diminue rapidement avant de se stabiliser, indiquant le bon nombre de clusters.
+
+### **17. Classification avec Random Forest**
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+X = df_scaled.drop(columns=["Cluster"])
+y = df_scaled["Cluster"]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+clf = RandomForestClassifier(n_estimators=100, random_state=42)
+clf.fit(X_train, y_train)
+
+y_pred = clf.predict(X_test)
+print("Précision du modèle:", accuracy_score(y_test, y_pred))
+
+**Explication**
+
+Random Forest est utilisé pour classifier les clusters obtenus.
+train_test_split() sépare les données en 80% entraînement / 20% test.
+clf.fit(X_train, y_train) entraîne le modèle.
+accuracy_score() mesure la précision de la classification.
+
+**Résultat attendu**
+
+Une précision indiquant dans quelle mesure le modèle distingue correctement les clusters.
+
+### **18. Sauvegarde du modèle entraîné**
+
+import joblib
+
+joblib.dump(clf, "../models/random_forest_model.joblib")
+print("Modèle sauvegardé.")
+
+**Explication**
+
+joblib.dump() enregistre le modèle Random Forest pour une utilisation future.
+
+**Résultat attendu**
+
+Un fichier .joblib stockant le modèle entraîné.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## **Documentation sur l'Ingénierie des Prompts**
 
 ### **1. Chargement et conversion des données**
