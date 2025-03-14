@@ -4,10 +4,11 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 from pathlib import Path
+import os
 
-# Import the functions from interface
-MODEL_PATH = Path(__file__).parent.parent / 'models' / 'rf_model_compressed.joblib'
-EXPLAINER_PATH = Path(__file__).parent.parent / 'models' / 'shap_explainer_new.joblib'
+# Use environment variables with fallback paths
+MODEL_PATH = os.getenv('MODEL_PATH', str(Path(__file__).parent.parent / 'models' / 'rf_model_compressed.joblib'))
+EXPLAINER_PATH = os.getenv('EXPLAINER_PATH', str(Path(__file__).parent.parent / 'models' / 'shap_explainer_new.joblib'))
 
 @pytest.fixture(scope="module")
 def model_and_explainer():
