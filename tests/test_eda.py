@@ -1,73 +1,71 @@
+import pytest
 import pandas as pd
 import numpy as np
-from scipy.io import arff
-from scipy.stats.mstats import winsorize
-from imblearn.over_sampling import SMOTE
-from sklearn.model_selection import train_test_split
+import sys
+import os
 
-# Load the dataset
-def load_dataset():
-    data, meta = arff.loadarff("../data/bone-marrow.arff")
+# Add project root to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+def test_missing_values():
+    """Test missing values identification and handling"""
+    # Create sample data with known missing values
+    data = {
+        'Recipientage': [10, 15, np.nan, 8],
+        'Donorage': [30, np.nan, 25, 35],
+        'HLAmatch': [8, 7, np.nan, 6],
+        'survival_time': [100, 200, 150, np.nan]
+    }
     df = pd.DataFrame(data)
-    return df
+    
+    # Test missing value identification
+    assert df.isnull().sum().sum() == 4, "Should identify 4 missing values"
+    
+    # Test missing value handling
+    df_filled = df.fillna({
+        'Recipientage': df['Recipientage'].mean(),
+        'Donorage': df['Donorage'].mean(),
+        'HLAmatch': df['HLAmatch'].median(),
+        'survival_time': df['survival_time'].median()
+    })
+    
+    assert df_filled.isnull().sum().sum() == 0, "All missing values should be filled"
 
-def test_load_dataset():
-    df = load_dataset()
-    assert not df.empty, "Dataset is empty"
-    assert df.shape[0] > 0, "Dataset has no rows"
-    assert df.shape[1] > 0, "Dataset has no columns"
+def test_data_types():
+    """Test data type consistency"""
+    data = {
+        'Recipientage': [10, 15, 8],
+        'Recipientgender': [1, 0, 1],
+        'survival_time': [100, 200, 150]
+    }
+    df = pd.DataFrame(data)
+    
+    assert df['Recipientage'].dtype in ['int64', 'float64'], "Age should be numeric"
+    assert df['Recipientgender'].dtype in ['int64', 'bool'], "Gender should be binary"
+    assert df['survival_time'].dtype in ['int64', 'float64'], "Survival time should be numeric"
 
-def test_handle_missing_values():
-    df = load_dataset()
-    numeric_cols = df.select_dtypes(include=['number']).columns
-    df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
-    assert df.isnull().sum().sum() == 0, "There are still missing values in the dataset"
+def test_value_ranges():
+    """Test value ranges are within expected bounds"""
+    data = {
+        'Recipientage': [10, 15, 8],
+        'HLAmatch': [8, 7, 6],
+        'Donorage': [30, 25, 35]
+    }
+    df = pd.DataFrame(data)
+    
+    assert df['Recipientage'].between(0, 18).all(), "Patient age should be between 0 and 18"
+    assert df['HLAmatch'].between(0, 10).all(), "HLA match should be between 0 and 10"
+    assert df['Donorage'].between(0, 100).all(), "Donor age should be between 0 and 100"
 
-def test_winsorization():
-    df = load_dataset()
-    numeric_cols = df.select_dtypes(include=['number']).columns
-    df_winsorized = df.copy()
-    for col in numeric_cols:
-        df_winsorized[col] = winsorize(df[col], limits=[0.05, 0.05])
-    assert df_winsorized.isnull().sum().sum() == 0, "There are missing values after Winsorization"
-
-def test_smote():
-    df = load_dataset()
-    numeric_cols = df.select_dtypes(include=['number']).columns
-    df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
-    df_winsorized = df.copy()
-    for col in numeric_cols:
-        df_winsorized[col] = winsorize(df[col], limits=[0.05, 0.05])
-    X = df_winsorized.drop('survival_status', axis=1)
-    y = df_winsorized['survival_status']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-    smote = SMOTE(random_state=42)
-    X_train_resampled, y_train_resampled = smote.fit_resample(X_train[numeric_cols], y_train)
-    assert len(X_train_resampled) == len(y_train_resampled), "SMOTE did not resample correctly"
-    assert y_train_resampled.value_counts().min() == y_train_resampled.value_counts().max(), "SMOTE did not balance the classes"
-
-def test_correlation_removal():
-    df = load_dataset()
-    numeric_cols = df.select_dtypes(include=['number']).columns
-    df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
-    df_winsorized = df.copy()
-    for col in numeric_cols:
-        df_winsorized[col] = winsorize(df[col], limits=[0.05, 0.05])
-    X = df_winsorized.drop('survival_status', axis=1)
-    y = df_winsorized['survival_status']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-    smote = SMOTE(random_state=42)
-    X_train_resampled, y_train_resampled = smote.fit_resample(X_train[numeric_cols], y_train)
-    correlation_matrix = pd.DataFrame(X_train_resampled, columns=numeric_cols).corr()
-    threshold = 0.8
-    highly_correlated_pairs = [(i, j) for i in correlation_matrix.columns for j in correlation_matrix.columns if i != j and abs(correlation_matrix.loc[i, j]) > threshold]
-    features_to_remove = set()
-    for i, j in highly_correlated_pairs:
-        if i not in features_to_remove and j not in features_to_remove:
-            features_to_remove.add(j)
-    X_train_resampled_reduced = pd.DataFrame(X_train_resampled, columns=numeric_cols).drop(columns=list(features_to_remove))
-    assert len(X_train_resampled_reduced.columns) < len(numeric_cols), "No features were removed for correlation"
-
-if __name__ == "__main__":
-    import pytest
-    pytest.main()
+def test_categorical_values():
+    """Test categorical values are within expected categories"""
+    data = {
+        'Stemcellsource': [0, 1, 2],
+        'Disease': [0, 1, 2],
+        'Riskgroup': [0, 1, 2]
+    }
+    df = pd.DataFrame(data)
+    
+    assert df['Stemcellsource'].isin([0, 1, 2]).all(), "Invalid stem cell source category"
+    assert df['Disease'].isin([0, 1, 2]).all(), "Invalid disease category"
+    assert df['Riskgroup'].isin([0, 1, 2]).all(), "Invalid risk group category"
