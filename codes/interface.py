@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # Load the trained model and SHAP explainer
 try:
     model = joblib.load(r'C:\Users\imadb\Documents\GitHub\bone_marrow_transplant\models\rf_model_compressed.joblib')
-    explainer = joblib.load(r'C:\Users\imadb\Documents\GitHub\bone_marrow_transplant\models\shap_explainer.joblib')
+    explainer = joblib.load(r'C:\Users\imadb\Documents\GitHub\bone_marrow_transplant\models\shap_explainer_new.joblib')
 except FileNotFoundError:
     st.error("Model files not found. Please ensure the model files are in the correct location.")
     st.stop()
@@ -42,45 +42,49 @@ def generate_shap_explanation(data):
         # Convert input data to DataFrame
         df = pd.DataFrame([data])
         
-        # Ensure correct feature order and types
-        df = df[model.feature_names_in_].astype(float)
+        # Ensure correct feature order
+        df = df[model.feature_names_in_]
         
-        # Calculate SHAP values
-        shap_values = explainer.shap_values(df)
+        # Calculate SHAP values with additivity check disabled
+        shap_values = explainer.shap_values(df, check_additivity=False)
         
-        # Create summary plot
+        # Create visualization
         plt.clf()  # Clear any existing plots
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(12, 8))
         
+        # Get importance values
         if isinstance(shap_values, list):
-            # For binary classification, use positive class (index 1)
-            feature_importance = np.abs(shap_values[1]).mean(0)
-            feature_names = df.columns
-            
-            # Create bar plot
-            y_pos = np.arange(len(feature_names))
-            ax.barh(y_pos, feature_importance)
-            ax.set_yticks(y_pos)
-            ax.set_yticklabels(feature_names)
-            ax.set_xlabel('mean(|SHAP value|)')
+            shap_values = shap_values[1]  # Use SHAP values for the positive class
+        
+        if shap_values.ndim == 3:
+            importance_values = shap_values[0][:, 1]  # Use SHAP values for the positive class
         else:
-            feature_importance = np.abs(shap_values).mean(0)
-            feature_names = df.columns
+            importance_values = shap_values[0] if shap_values.ndim > 1 else shap_values
             
-            # Create bar plot
-            y_pos = np.arange(len(feature_names))
-            ax.barh(y_pos, feature_importance)
-            ax.set_yticks(y_pos)
-            ax.set_yticklabels(feature_names)
-            ax.set_xlabel('mean(|SHAP value|)')
+        feature_names = df.columns
         
-        plt.title('Feature Importance Analysis')
+        # Sort by absolute importance
+        sorted_idx = np.argsort(np.abs(importance_values))
+        feature_names = np.array(feature_names)[sorted_idx]
+        importance_values = importance_values[sorted_idx]
+        
+        # Create bar plot
+        y_pos = np.arange(len(feature_names))
+        colors = ['#ff4b4b' if v < 0 else '#2e8b57' for v in importance_values]
+        ax.barh(y_pos, importance_values, color=colors)
+        
+        # Customize plot
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(feature_names)
+        ax.set_xlabel('SHAP Impact')
+        ax.set_title('Feature Importance Analysis')
+        ax.grid(True, axis='x', linestyle='--', alpha=0.3)
+        
         plt.tight_layout()
-        
         return True, fig
         
     except Exception as e:
-        return False, f"Error generating explanation: {str(e)}"
+        return False, f"Error generating explanation: {str(e)} ({type(e).__name__})"
 
 # Page configuration
 st.set_page_config(
