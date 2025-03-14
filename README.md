@@ -1,6 +1,3 @@
-Voici la version détaillée de la documentation sans les améliorations potentielles, avec des résultats plus développés pour chaque étape :
-
----
 
 # **Projet de Transplantation de Moelle Osseuse**
 
