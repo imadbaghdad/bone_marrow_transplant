@@ -12,46 +12,46 @@ Seconde tentative : Remplacement des valeurs manquantes uniquement pour les colo
 import pandas as pd
 from scipy.io import arff
 
-# Load the ARFF file
+**Load the ARFF file**
 data, meta = arff.loadarff("../data/bone-marrow.arff")
 
-# Convert to a pandas DataFrame
+**Convert to a pandas DataFrame**
 df = pd.DataFrame(data)
 
-# Display the first few rows of the DataFrame
+**Display the first few rows of the DataFrame**
 df.head()
 
-# Explication :
+**Explication :**
 Le fichier .arff est chargé avec arff.loadarff().
 Les données sont converties en DataFrame Pandas pour être manipulables.
 df.head() affiche les 5 premières lignes du dataset.
-# Résultat attendu : 
+**Résultat attendu :** 
 Un aperçu du dataset sous forme tabulaire.
 
 ### **2. Vérification des Valeurs Manquantes**
-# Check for missing values
+**Check for missing values**
 missing_values = df.isnull().sum()
 print("Missing values in each column:")
 print(missing_values)
 
-# Explication :
+**Explication :**
 df.isnull().sum() comptabilise les valeurs NaN dans chaque colonne.
 Le résultat affiche le nombre de valeurs manquantes par colonne.
-# Résultat attendu : 
+**Résultat attendu :** 
 Un aperçu des premières lignes avec les différentes variables et leurs valeurs, ce qui aide à identifier le format et éventuellement les types de données.
 
 ### **3. Analyse des valeurs manquantes**
 Pour comprendre la qualité des données, on procède à un contrôle des valeurs manquantes dans chaque colonne.
-# Check for missing values
+**Check for missing values**
 missing_values = df.isnull().sum()
 print("Missing values in each column:")
 print(missing_values)
 
-# Explications :
+**Explications :**
 df.isnull() crée un DataFrame de booléens indiquant où se trouvent les valeurs manquantes.
 La méthode sum() appliquée sur ce DataFrame agrège le nombre de valeurs manquantes pour chaque colonne.
 L’affichage permet de voir quelles colonnes contiennent des NaN ou valeurs absentes.
-# Résultat attendu :
+**Résultat attendu :**
 Un compte détaillé des valeurs manquantes par colonne, ce qui permet de décider comment traiter ces données manquantes.
 
 ### **4. Visualisation graphique des valeurs manquantes**
@@ -59,42 +59,42 @@ Pour une meilleure compréhension visuelle, on utilise une carte thermique (heat
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Visualize missing values
+**Visualize missing values**
 plt.figure(figsize=(10, 6))
 sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
 plt.title('Missing Values Heatmap')
 plt.show()
 
-# Explications :
+**Explications :**
 Seaborn et Matplotlib permettent de générer des graphiques de haute qualité.
 La heatmap est construite à partir de df.isnull(), où chaque cellule indique (par une couleur) si une valeur est manquante ou non.
 L’utilisation de la palette de couleurs viridis offre un contraste permettant d’identifier facilement les zones problématiques.
-# Résultat attendu :
+**Résultat attendu :**
 Un graphique où les zones avec des valeurs manquantes se distinguent visuellement, facilitant l’identification de colonnes nécessitant un traitement particulier.
 
 ### **5. Traitement des valeurs manquantes**
 On traite ensuite les valeurs manquantes en les remplaçant par la moyenne des valeurs de chaque colonne.
-# Fill missing values with the mean of each column
+**Fill missing values with the mean of each column**
 df.fillna(df.mean(), inplace=True)
 
-# Explications :
+**Explications :**
 df.fillna(df.mean(), inplace=True) : Cette instruction calcule la moyenne de chaque colonne numérique et remplace directement les NaN par ces moyennes.
 L’argument inplace=True permet d’appliquer le changement directement sur le DataFrame sans devoir créer une nouvelle variable.
-# Résultat attendu :
+**Résultat attendu :**
 Le DataFrame df ne comporte plus de valeurs manquantes dans les colonnes numériques, ce qui est essentiel pour de nombreuses méthodes d’analyse et algorithmes de machine learning.
 
 ### **6. Vérification post-traitement**
 Pour confirmer que le traitement des valeurs manquantes a bien été effectué, on génère une nouvelle heatmap.
-# Verify that there are no more missing values
+**Verify that there are no more missing values**
 plt.figure(figsize=(10, 6))
 sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
 plt.title('Missing Values Heatmap After Handling')
 plt.show()
 
-# Explications :
+**Explications :**
 La deuxième heatmap permet de vérifier visuellement que toutes les cases initialement identifiées comme manquantes ont bien été remplies.
 L’absence de couleurs indiquant des valeurs manquantes confirme la réussite du traitement.
-# Résultat attendu :
+**Résultat attendu :**
 Une heatmap complètement "propre", c’est-à-dire sans indication de valeurs manquantes, prouvant que toutes les anomalies ont été corrigées.
 
 
