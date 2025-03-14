@@ -3,99 +3,267 @@
 ## **Explication des étapes suivies dans le notebook "eda.ipynb"**
 L'objectif du notebook est d'explorer et de prétraiter un dataset contenant des informations sur les greffes de moelle osseuse. L'analyse comprend les étapes suivantes :
 
-Chargement du dataset
-Vérification et visualisation des valeurs manquantes
-Gestion des valeurs manquantes
-Première tentative : Remplacement général par la moyenne (échec)
-Seconde tentative : Remplacement des valeurs manquantes uniquement pour les colonnes numériques (succès)
+**Chargement du dataset**
+
+**Vérification et visualisation des valeurs manquantes**
+
+**Gestion des valeurs manquantes**
+
+**Première tentative : Remplacement général par la moyenne (échec)**
+
+**Seconde tentative : Remplacement des valeurs manquantes uniquement pour les colonnes numériques (succès)**
+
+**Nettoyage approfondi des valeurs manquantes**
+
+**Stockage des données nettoyées**
+
+**Winsorization (traitement des valeurs extrêmes)**
+
+
+
+
 ### **1. Chargement du Dataset**
+
 import pandas as pd
 from scipy.io import arff
 
 **Load the ARFF file**
+
 data, meta = arff.loadarff("../data/bone-marrow.arff")
 
 **Convert to a pandas DataFrame**
+
 df = pd.DataFrame(data)
 
 **Display the first few rows of the DataFrame**
+
 df.head()
 
 **Explication :**
+
 Le fichier .arff est chargé avec arff.loadarff().
 Les données sont converties en DataFrame Pandas pour être manipulables.
 df.head() affiche les 5 premières lignes du dataset.
+
 **Résultat attendu :** 
+
 Un aperçu du dataset sous forme tabulaire.
 
 ### **2. Vérification des Valeurs Manquantes**
+
 **Check for missing values**
+
 missing_values = df.isnull().sum()
 print("Missing values in each column:")
 print(missing_values)
 
 **Explication :**
+
 df.isnull().sum() comptabilise les valeurs NaN dans chaque colonne.
 Le résultat affiche le nombre de valeurs manquantes par colonne.
-**Résultat attendu :** 
+
+**Résultat attendu :**
+
 Un aperçu des premières lignes avec les différentes variables et leurs valeurs, ce qui aide à identifier le format et éventuellement les types de données.
 
 ### **3. Analyse des valeurs manquantes**
+
 Pour comprendre la qualité des données, on procède à un contrôle des valeurs manquantes dans chaque colonne.
+
 **Check for missing values**
+
 missing_values = df.isnull().sum()
 print("Missing values in each column:")
 print(missing_values)
 
 **Explications :**
+
 df.isnull() crée un DataFrame de booléens indiquant où se trouvent les valeurs manquantes.
 La méthode sum() appliquée sur ce DataFrame agrège le nombre de valeurs manquantes pour chaque colonne.
 L’affichage permet de voir quelles colonnes contiennent des NaN ou valeurs absentes.
+
 **Résultat attendu :**
+
 Un compte détaillé des valeurs manquantes par colonne, ce qui permet de décider comment traiter ces données manquantes.
 
 ### **4. Visualisation graphique des valeurs manquantes**
+
 Pour une meilleure compréhension visuelle, on utilise une carte thermique (heatmap) pour représenter la présence de valeurs manquantes dans le dataset.
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 **Visualize missing values**
+
 plt.figure(figsize=(10, 6))
 sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
 plt.title('Missing Values Heatmap')
 plt.show()
 
 **Explications :**
+
 Seaborn et Matplotlib permettent de générer des graphiques de haute qualité.
 La heatmap est construite à partir de df.isnull(), où chaque cellule indique (par une couleur) si une valeur est manquante ou non.
 L’utilisation de la palette de couleurs viridis offre un contraste permettant d’identifier facilement les zones problématiques.
+
 **Résultat attendu :**
+
 Un graphique où les zones avec des valeurs manquantes se distinguent visuellement, facilitant l’identification de colonnes nécessitant un traitement particulier.
 
 ### **5. Traitement des valeurs manquantes**
+
 On traite ensuite les valeurs manquantes en les remplaçant par la moyenne des valeurs de chaque colonne.
+
 **Fill missing values with the mean of each column**
+
 df.fillna(df.mean(), inplace=True)
 
 **Explications :**
+
 df.fillna(df.mean(), inplace=True) : Cette instruction calcule la moyenne de chaque colonne numérique et remplace directement les NaN par ces moyennes.
 L’argument inplace=True permet d’appliquer le changement directement sur le DataFrame sans devoir créer une nouvelle variable.
+
 **Résultat attendu :**
+
 Le DataFrame df ne comporte plus de valeurs manquantes dans les colonnes numériques, ce qui est essentiel pour de nombreuses méthodes d’analyse et algorithmes de machine learning.
 
 ### **6. Vérification post-traitement**
+
 Pour confirmer que le traitement des valeurs manquantes a bien été effectué, on génère une nouvelle heatmap.
+
 **Verify that there are no more missing values**
+
 plt.figure(figsize=(10, 6))
 sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
 plt.title('Missing Values Heatmap After Handling')
 plt.show()
 
 **Explications :**
+
 La deuxième heatmap permet de vérifier visuellement que toutes les cases initialement identifiées comme manquantes ont bien été remplies.
 L’absence de couleurs indiquant des valeurs manquantes confirme la réussite du traitement.
+
 **Résultat attendu :**
+
 Une heatmap complètement "propre", c’est-à-dire sans indication de valeurs manquantes, prouvant que toutes les anomalies ont été corrigées.
+
+### **7. Nettoyage approfondi des valeurs manquantes**
+
+**Fill missing values with the mean of each numeric column**
+
+numeric_cols = df.select_dtypes(include=['number']).columns
+df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
+
+**Check for remaining missing values**
+
+missing_values = df.isnull().sum()
+print("Missing values in each column after handling:")
+print(missing_values)
+
+ **Explication :**
+
+Vérification plus précise des colonnes numériques.
+Affichage des valeurs manquantes restantes.
+
+**Résultat attendu :**
+
+Un affichage indiquant si toutes les valeurs ont bien été corrigées.
+
+### **8. Confirmation finale de la correction**
+
+if missing_values.sum() == 0:
+    print("There are no missing values left in the dataset.")
+else:
+    print("There are still missing values in the dataset.")
+
+**Explication :**
+
+Vérifie s'il reste des valeurs manquantes après traitement.
+
+**Résultat attendu :**
+
+Un message confirmant que toutes les valeurs ont été corrigées.
+
+### **9. Stockage des données nettoyées**
+
+df_cleaned = df.copy()
+
+ **Explication :**
+
+Sauvegarde des données nettoyées pour des analyses ultérieures.
+
+### **10. Visualisation des distributions avant transformation**
+
+plt.figure(figsize=(15, 10))
+df_cleaned[numeric_cols].boxplot()
+plt.xticks(rotation=90)
+plt.title('Box Plot for Numeric Columns Before Winsorization')
+plt.show()
+
+plt.figure(figsize=(15, 10))
+df_cleaned[numeric_cols].hist(bins=30, layout=(len(numeric_cols) // 3 + 1, 3))
+plt.suptitle('Histogram for Numeric Columns Before Winsorization', y=1.02)
+plt.tight_layout()
+plt.show()
+
+**Explication :**
+
+Visualisation des données avec des boxplots et des histogrammes.
+
+**Résultat attendu :**
+
+Des graphiques montrant la distribution des variables numériques.
+
+### **11. Winsorization (traitement des valeurs extrêmes)**
+
+from scipy.stats.mstats import winsorize
+
+df_winsorized = df_cleaned.copy()
+for col in numeric_cols:
+    df_winsorized[col] = winsorize(df_cleaned[col], limits=[0.05, 0.05])
+
+**Explication :**
+
+La Winsorization réduit l'impact des valeurs extrêmes en limitant les valeurs extrêmes à 5% inférieur et supérieur.
+
+**Résultat attendu :**
+
+Un dataset où les outliers sont atténués.
+
+### **12. Visualisation après Winsorization**
+
+plt.figure(figsize=(15, 10))
+df_winsorized[numeric_cols].boxplot()
+plt.xticks(rotation=90)
+plt.title('Box Plot for Numeric Columns After Winsorization')
+plt.show()
+
+plt.figure(figsize=(15, 10))
+df_winsorized[numeric_cols].hist(bins=30, layout=(len(numeric_cols) // 3 + 1, 3))
+plt.suptitle('Histogram for Numeric Columns After Winsorization', y=1.02)
+plt.tight_layout()
+plt.show()
+
+**Explication :**
+
+Comparaison entre les distributions avant et après Winsorization.
+
+**Résultat attendu :**
+
+Des distributions moins influencées par les valeurs extrêmes.
+
+### **13. Sauvegarde des données finales**
+
+df_winsorized.to_csv('../data/winsorized_data.csv', index=False)
+print("Winsorized data has been exported to '../data/winsorized_data.csv'")
+
+**Explication :**
+
+Sauvegarde du dataset nettoyé et transformé.
+
+**Résultat attendu :**
+
+Un fichier CSV contenant les données prêtes pour l'analyse ou le machine learning.
+
 
 
 ## **Documentation sur l'Ingénierie des Prompts**
