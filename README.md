@@ -1,783 +1,95 @@
-
-# **Projet de Transplantation de Moelle Osseuse**
-## **Explication des étapes suivies dans le notebook "eda.ipynb"**
-L'objectif du notebook est d'explorer et de prétraiter un dataset contenant des informations sur les greffes de moelle osseuse. L'analyse comprend les étapes suivantes :
-
-**Chargement du dataset**
-
-**Vérification et visualisation des valeurs manquantes**
-
-**Gestion des valeurs manquantes**
-
-**Première tentative : Remplacement général par la moyenne (échec)**
-
-**Seconde tentative : Remplacement des valeurs manquantes uniquement pour les colonnes numériques (succès)**
-
-**Nettoyage approfondi des valeurs manquantes**
-
-**Stockage des données nettoyées**
-
-**Winsorization (traitement des valeurs extrêmes)**
-
-
-
-
-### **1. Chargement du Dataset**
-
-import pandas as pd
-from scipy.io import arff
-
-**Load the ARFF file**
-
-data, meta = arff.loadarff("../data/bone-marrow.arff")
-
-**Convert to a pandas DataFrame**
-
-df = pd.DataFrame(data)
-
-**Display the first few rows of the DataFrame**
-
-df.head()
-
-**Explication :**
-
-Le fichier .arff est chargé avec arff.loadarff().
-Les données sont converties en DataFrame Pandas pour être manipulables.
-df.head() affiche les 5 premières lignes du dataset.
-
-**Résultat attendu :** 
-
-Un aperçu du dataset sous forme tabulaire.
-
-### **2. Vérification des Valeurs Manquantes**
-
-**Check for missing values**
-
-missing_values = df.isnull().sum()
-print("Missing values in each column:")
-print(missing_values)
-
-**Explication :**
-
-df.isnull().sum() comptabilise les valeurs NaN dans chaque colonne.
-Le résultat affiche le nombre de valeurs manquantes par colonne.
-
-**Résultat attendu :**
-
-Un aperçu des premières lignes avec les différentes variables et leurs valeurs, ce qui aide à identifier le format et éventuellement les types de données.
-
-### **3. Analyse des valeurs manquantes**
-
-Pour comprendre la qualité des données, on procède à un contrôle des valeurs manquantes dans chaque colonne.
-
-**Check for missing values**
-
-missing_values = df.isnull().sum()
-print("Missing values in each column:")
-print(missing_values)
-
-**Explications :**
-
-df.isnull() crée un DataFrame de booléens indiquant où se trouvent les valeurs manquantes.
-La méthode sum() appliquée sur ce DataFrame agrège le nombre de valeurs manquantes pour chaque colonne.
-L’affichage permet de voir quelles colonnes contiennent des NaN ou valeurs absentes.
-
-**Résultat attendu :**
-
-Un compte détaillé des valeurs manquantes par colonne, ce qui permet de décider comment traiter ces données manquantes.
-
-### **4. Visualisation graphique des valeurs manquantes**
-
-Pour une meilleure compréhension visuelle, on utilise une carte thermique (heatmap) pour représenter la présence de valeurs manquantes dans le dataset.
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-**Visualize missing values**
-
-plt.figure(figsize=(10, 6))
-sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
-plt.title('Missing Values Heatmap')
-plt.show()
-
-**Explications :**
-
-Seaborn et Matplotlib permettent de générer des graphiques de haute qualité.
-La heatmap est construite à partir de df.isnull(), où chaque cellule indique (par une couleur) si une valeur est manquante ou non.
-L’utilisation de la palette de couleurs viridis offre un contraste permettant d’identifier facilement les zones problématiques.
-
-**Résultat attendu :**
-
-Un graphique où les zones avec des valeurs manquantes se distinguent visuellement, facilitant l’identification de colonnes nécessitant un traitement particulier.
-
-### **5. Traitement des valeurs manquantes**
-
-On traite ensuite les valeurs manquantes en les remplaçant par la moyenne des valeurs de chaque colonne.
-
-**Fill missing values with the mean of each column**
-
-df.fillna(df.mean(), inplace=True)
-
-**Explications :**
-
-df.fillna(df.mean(), inplace=True) : Cette instruction calcule la moyenne de chaque colonne numérique et remplace directement les NaN par ces moyennes.
-L’argument inplace=True permet d’appliquer le changement directement sur le DataFrame sans devoir créer une nouvelle variable.
-
-**Résultat attendu :**
-
-Le DataFrame df ne comporte plus de valeurs manquantes dans les colonnes numériques, ce qui est essentiel pour de nombreuses méthodes d’analyse et algorithmes de machine learning.
-
-### **6. Vérification post-traitement**
-
-Pour confirmer que le traitement des valeurs manquantes a bien été effectué, on génère une nouvelle heatmap.
-
-**Verify that there are no more missing values**
-
-plt.figure(figsize=(10, 6))
-sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
-plt.title('Missing Values Heatmap After Handling')
-plt.show()
-
-**Explications :**
-
-La deuxième heatmap permet de vérifier visuellement que toutes les cases initialement identifiées comme manquantes ont bien été remplies.
-L’absence de couleurs indiquant des valeurs manquantes confirme la réussite du traitement.
-
-**Résultat attendu :**
-
-Une heatmap complètement "propre", c’est-à-dire sans indication de valeurs manquantes, prouvant que toutes les anomalies ont été corrigées.
-
-### **7. Nettoyage approfondi des valeurs manquantes**
-
-**Fill missing values with the mean of each numeric column**
-
-numeric_cols = df.select_dtypes(include=['number']).columns
-df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
-
-**Check for remaining missing values**
-
-missing_values = df.isnull().sum()
-print("Missing values in each column after handling:")
-print(missing_values)
-
- **Explication :**
-
-Vérification plus précise des colonnes numériques.
-Affichage des valeurs manquantes restantes.
-
-**Résultat attendu :**
-
-Un affichage indiquant si toutes les valeurs ont bien été corrigées.
-
-### **8. Confirmation finale de la correction**
-
-if missing_values.sum() == 0:
-    print("There are no missing values left in the dataset.")
-else:
-    print("There are still missing values in the dataset.")
-
-**Explication :**
-
-Vérifie s'il reste des valeurs manquantes après traitement.
-
-**Résultat attendu :**
-
-Un message confirmant que toutes les valeurs ont été corrigées.
-
-### **9. Stockage des données nettoyées**
-
-df_cleaned = df.copy()
-
- **Explication :**
-
-Sauvegarde des données nettoyées pour des analyses ultérieures.
-
-### **10. Visualisation des distributions avant transformation**
-
-plt.figure(figsize=(15, 10))
-df_cleaned[numeric_cols].boxplot()
-plt.xticks(rotation=90)
-plt.title('Box Plot for Numeric Columns Before Winsorization')
-plt.show()
-
-plt.figure(figsize=(15, 10))
-df_cleaned[numeric_cols].hist(bins=30, layout=(len(numeric_cols) // 3 + 1, 3))
-plt.suptitle('Histogram for Numeric Columns Before Winsorization', y=1.02)
-plt.tight_layout()
-plt.show()
-
-**Explication :**
-
-Visualisation des données avec des boxplots et des histogrammes.
-
-**Résultat attendu :**
-
-Des graphiques montrant la distribution des variables numériques.
-
-### **11. Winsorization (traitement des valeurs extrêmes)**
-
-from scipy.stats.mstats import winsorize
-
-df_winsorized = df_cleaned.copy()
-for col in numeric_cols:
-    df_winsorized[col] = winsorize(df_cleaned[col], limits=[0.05, 0.05])
-
-**Explication :**
-
-La Winsorization réduit l'impact des valeurs extrêmes en limitant les valeurs extrêmes à 5% inférieur et supérieur.
-
-**Résultat attendu :**
-
-Un dataset où les outliers sont atténués.
-
-### **12. Visualisation après Winsorization**
-
-plt.figure(figsize=(15, 10))
-df_winsorized[numeric_cols].boxplot()
-plt.xticks(rotation=90)
-plt.title('Box Plot for Numeric Columns After Winsorization')
-plt.show()
-
-plt.figure(figsize=(15, 10))
-df_winsorized[numeric_cols].hist(bins=30, layout=(len(numeric_cols) // 3 + 1, 3))
-plt.suptitle('Histogram for Numeric Columns After Winsorization', y=1.02)
-plt.tight_layout()
-plt.show()
-
-**Explication :**
-
-Comparaison entre les distributions avant et après Winsorization.
-
-**Résultat attendu :**
-
-Des distributions moins influencées par les valeurs extrêmes.
-
-### **13. Sauvegarde des données finales**
-
-df_winsorized.to_csv('../data/winsorized_data.csv', index=False)
-print("Winsorized data has been exported to '../data/winsorized_data.csv'")
-
-**Explication :**
-
-Sauvegarde du dataset nettoyé et transformé.
-
-**Résultat attendu :**
-
-Un fichier CSV contenant les données prêtes pour l'analyse ou le machine learning.
-
-
-
-## **Explication des étapes suivies dans le notebook "eda2.ipynb"**
-
-### **1. Importation des bibliothèques et chargement des données**
-
-import pandas as pd
-from scipy.io import arff
-
-**Chargement du fichier ARFF**
-
-data, meta = arff.loadarff("../data/bone-marrow.arff")
-
-**Conversion en DataFrame Pandas**
-
-df = pd.DataFrame(data)
-
-**Affichage des premières lignes**
-
-df.head()
-
- **Explication**
-
-pandas est importé pour manipuler les données sous forme de tableau.
-scipy.io.arff est utilisé pour charger des fichiers .arff, format souvent utilisé pour les datasets en machine learning.
-arff.loadarff() charge les données et les métadonnées.
-df = pd.DataFrame(data) transforme les données en DataFrame.
-df.head() affiche les 5 premières lignes pour visualiser la structure des données.
-
-**Résultat attendu**
-
-Un aperçu du dataset avec ses premières lignes et colonnes.
-
-### **2. Vérification des valeurs manquantes**
-
-**Vérification des valeurs manquantes**
-
-missing_values = df.isnull().sum()
-print("Valeurs manquantes par colonne:")
-print(missing_values)
-
- **Explication**
-
-df.isnull().sum() compte le nombre de valeurs NaN dans chaque colonne.
-
-**Résultat attendu**
-
-Une liste affichant les colonnes qui contiennent des valeurs manquantes et leur nombre.
-
-### **3. Visualisation des valeurs manquantes**
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-**Heatmap des valeurs manquantes**
-
-plt.figure(figsize=(10, 6))
-sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
-plt.title('Carte des valeurs manquantes')
-plt.show()
-
-**Explication**
-
-sns.heatmap(df.isnull(), cbar=False, cmap='viridis') crée une carte thermique pour repérer les valeurs manquantes.
-
-**Résultat attendu**
-
-Un graphique où les cellules contenant des valeurs manquantes apparaissent en couleur.
-
-### **4. Remplacement des valeurs manquantes**
-
-**Remplissage avec la moyenne pour les colonnes numériques**
-
-df.fillna(df.mean(), inplace=True)
-
-**Explication**
-
-df.fillna(df.mean(), inplace=True) remplace les valeurs NaN par la moyenne des colonnes.
-
-**Résultat attendu**
-
-Toutes les valeurs manquantes des colonnes numériques sont remplacées.
-
-### **5. Vérification après correction**
-
-plt.figure(figsize=(10, 6))
-sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
-plt.title('Carte des valeurs manquantes après correction')
-plt.show()
-
- **Explication**
-
-Une nouvelle heatmap est affichée pour s’assurer qu’il ne reste plus de valeurs manquantes.
-
-**Résultat attendu**
-
-Une heatmap vide, confirmant l’absence de valeurs manquantes.
-
-### **6. Analyse des statistiques descriptives**
-
-df.describe()
-
-**Explication**
-
-df.describe() génère des statistiques (moyenne, médiane, écart-type, min, max) pour chaque variable numérique.
-
-**Résultat attendu**
-
-Un tableau avec des statistiques résumant la distribution des données.
-
-### **7. Détection des valeurs extrêmes (outliers)**
-
-plt.figure(figsize=(15, 10))
-df.boxplot()
-plt.xticks(rotation=90)
-plt.title('Boxplot des colonnes numériques')
-plt.show()
-
-**Explication**
-
-df.boxplot() affiche des boxplots pour chaque colonne afin de visualiser les valeurs extrêmes.
-
-**Résultat attendu**
-
-Des points isolés en dehors des moustaches des boxplots indiquant la présence d'outliers.
-
-### **8. Suppression des outliers**
-
-from scipy.stats.mstats import winsorize
-
-df_winsorized = df.copy()
-for col in df.select_dtypes(include=['number']).columns:
-    df_winsorized[col] = winsorize(df[col], limits=[0.05, 0.05])
-
-**Explication**
-
-Winsorization est appliquée : les valeurs extrêmes sont remplacées par des valeurs plus proches des percentiles 5% et 95%.
-
-**Résultat attendu**
-
-Un dataset avec des valeurs extrêmes atténuées, sans modification excessive de la distribution.
-
-### **9. Vérification après Winsorization**
-
-plt.figure(figsize=(15, 10))
-df_winsorized.boxplot()
-plt.xticks(rotation=90)
-plt.title('Boxplot après Winsorization')
-plt.show()
-
-**Explication**
-
-Affichage des nouveaux boxplots après réduction des outliers.
-
-**Résultat attendu**
-
-Moins de valeurs extrêmes en dehors des moustaches des boxplots.
-
-### **10. Vérification de la distribution des variables**
-
-df.hist(figsize=(12, 10), bins=30)
-plt.suptitle('Histogrammes des variables')
-plt.show()
-
-**Explication**
-
-df.hist() crée des histogrammes pour voir la distribution de chaque variable.
-
-**Résultat attendu**
-
-Des graphiques montrant la forme des distributions (normale, asymétrique, multimodale...).
-
-### **11. Transformation des variables (normalisation)**
-
-from sklearn.preprocessing import StandardScaler
-
-scaler = StandardScaler()
-df_scaled = pd.DataFrame(scaler.fit_transform(df_winsorized), columns=df.columns)
-
-**Explication**
-
-Standardisation des données pour ramener toutes les variables à une même échelle (moyenne = 0, écart-type = 1).
-
-**Résultat attendu**
-
-Un dataset où toutes les variables sont transformées pour une meilleure comparabilité.
-
-### **12. Sauvegarde des données nettoyées**
-
-df_scaled.to_csv('../data/processed_data.csv', index=False)
-print("Les données nettoyées ont été enregistrées.")
-
-**Explication**
-
-df_scaled.to_csv() enregistre le dataset nettoyé et normalisé.
-
-**Résultat attendu**
-
-Un fichier .csv prêt pour l'analyse ou l'entraînement d'un modèle ML.
-
-### **13. Analyse de la corrélation entre les variables**
-
-plt.figure(figsize=(12, 8))
-sns.heatmap(df_scaled.corr(), annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
-plt.title("Matrice de corrélation")
-plt.show()
-
-**Explication**
-
-df_scaled.corr() calcule les coefficients de corrélation de Pearson entre les variables.
-sns.heatmap() affiche une matrice de corrélation où les couleurs indiquent la force et la direction des relations.
-
-**Résultat attendu**
-
-Un heatmap montrant quelles variables sont fortement corrélées (+1 ou -1) et lesquelles sont indépendantes (≈0).
-
-### **14. Réduction de dimension avec PCA**
-
-from sklearn.decomposition import PCA
-
-pca = PCA(n_components=2)
-df_pca = pca.fit_transform(df_scaled)
-
-plt.scatter(df_pca[:, 0], df_pca[:, 1], alpha=0.5)
-plt.xlabel("Composante principale 1")
-plt.ylabel("Composante principale 2")
-plt.title("Projection PCA des données")
-plt.show()
-
-**Explication**
-
-PCA (Analyse en Composantes Principales) est utilisé pour réduire la dimensionnalité tout en conservant le maximum de variance.
-PCA(n_components=2) réduit les données à 2 dimensions.
-plt.scatter() visualise les données projetées sur ces deux axes principaux.
-
-**Résultat attendu**
-
-Un nuage de points représentant les données dans un espace à 2 dimensions, facilitant l'interprétation.
-
-### **15. Clustering avec K-Means**
-
-from sklearn.cluster import KMeans
-
-kmeans = KMeans(n_clusters=3, random_state=42)
-df_scaled["Cluster"] = kmeans.fit_predict(df_scaled)
-
-plt.scatter(df_pca[:, 0], df_pca[:, 1], c=df_scaled["Cluster"], cmap="viridis", alpha=0.5)
-plt.xlabel("Composante principale 1")
-plt.ylabel("Composante principale 2")
-plt.title("Clustering K-Means sur les données PCA")
-plt.show()
-
-**Explication**
-
-KMeans(n_clusters=3) applique un clustering en 3 groupes.
-fit_predict(df_scaled) assigne un cluster à chaque observation.
-plt.scatter() colore les points selon leur cluster.
-
- **Résultat attendu**
- 
-Un nuage de points coloré où les observations sont regroupées en trois clusters.
-
-### **16. Évaluation du clustering avec l’inertie**
-
-inertias = []
-for k in range(1, 11):
-    kmeans = KMeans(n_clusters=k, random_state=42)
-    kmeans.fit(df_scaled)
-    inertias.append(kmeans.inertia_)
-
-plt.plot(range(1, 11), inertias, marker="o")
-plt.xlabel("Nombre de clusters")
-plt.ylabel("Inertie")
-plt.title("Méthode du coude pour déterminer K")
-plt.show()
-
-**Explication**
-
-On calcule l’inertie pour k entre 1 et 10.
-L’inertie mesure la compacité des clusters.
-La méthode du coude aide à déterminer le nombre optimal de clusters.
-
-**Résultat attendu**
-
-Un graphique en forme de coude où l’inertie diminue rapidement avant de se stabiliser, indiquant le bon nombre de clusters.
-
-### **17. Classification avec Random Forest**
-
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-
-X = df_scaled.drop(columns=["Cluster"])
-y = df_scaled["Cluster"]
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-clf = RandomForestClassifier(n_estimators=100, random_state=42)
-clf.fit(X_train, y_train)
-
-y_pred = clf.predict(X_test)
-print("Précision du modèle:", accuracy_score(y_test, y_pred))
-
-**Explication**
-
-Random Forest est utilisé pour classifier les clusters obtenus.
-train_test_split() sépare les données en 80% entraînement / 20% test.
-clf.fit(X_train, y_train) entraîne le modèle.
-accuracy_score() mesure la précision de la classification.
-
-**Résultat attendu**
-
-Une précision indiquant dans quelle mesure le modèle distingue correctement les clusters.
-
-### **18. Sauvegarde du modèle entraîné**
-
-import joblib
-
-joblib.dump(clf, "../models/random_forest_model.joblib")
-print("Modèle sauvegardé.")
-
-**Explication**
-
-joblib.dump() enregistre le modèle Random Forest pour une utilisation future.
-
-**Résultat attendu**
-
-Un fichier .joblib stockant le modèle entraîné.
-
-
-
-## **Explication du code intitulé "interface.py" qui permet de créer notre interface**
-
-### **1. Importation des bibliothèques**
-
-import streamlit as st
-import pandas as pd
-import numpy as np
-import joblib
-import shap
-import matplotlib.pyplot as plt
-
-**Explication :**
-
-streamlit : Permet de créer une application web interactive.
-pandas : Utilisé pour manipuler les données tabulaires (format DataFrame).
-numpy : Pour les opérations mathématiques et manipulation des tableaux.
-joblib : Sert à charger le modèle de Machine Learning et l’explainer SHAP.
-shap : Utilisé pour expliquer les décisions du modèle (interprétabilité).
-matplotlib.pyplot : Permet de tracer des graphiques, notamment pour SHAP.
-
-### **2. Chargement du modèle et de l’explainer SHAP**
-
-try:
-    model = joblib.load(r'C:\Users\imadb\Documents\GitHub\bone_marrow_transplant\models\rf_model_compressed.joblib')
-    explainer = joblib.load(r'C:\Users\imadb\Documents\GitHub\bone_marrow_transplant\models\shap_explainer_new.joblib')
-except FileNotFoundError:
-    st.error("Model files not found. Please ensure the model files are in the correct location.")
-    st.stop()
-
-**Explication :**
-
-joblib.load() charge le modèle de Machine Learning (rf_model_compressed.joblib) et l’explainer SHAP (shap_explainer_new.joblib).
-Gestion d'erreur : Si les fichiers ne sont pas trouvés, un message d’erreur est affiché avec st.error(), et st.stop() arrête l'exécution de l'application.
-
-### **3. Fonction de prédiction**
-
-def predict_success_rate(data):
-    df = pd.DataFrame([data])
-    prediction = model.predict(df)
-    prediction_proba = model.predict_proba(df)
-    return prediction, prediction_proba
-
-**Explication :**
-
-Convertit les données d'entrée (data, un dictionnaire) en un DataFrame pandas.
-Utilise model.predict() pour obtenir une prédiction (succès ou échec de la greffe).
-model.predict_proba() retourne les probabilités de chaque classe (succès ou échec).
-Renvoie :
-prediction : 0 ou 1 (succès/échec).
-prediction_proba : Probabilité associée à chaque classe.
-
-### **4. Explication SHAP**
-
-def generate_shap_explanation(data):
-    try:
-        df = pd.DataFrame([data])
-        df = df[model.feature_names_in_]  
-        shap_values = explainer.shap_values(df, check_additivity=False)
-        
-        plt.clf()
-        fig, ax = plt.subplots(figsize=(12, 8))
-        
-        importance_values = shap_values[0, :, 1]
-        feature_names = df.columns
-        
-        sorted_idx = np.argsort(np.abs(importance_values))
-        feature_names = np.array(feature_names)[sorted_idx]
-        importance_values = importance_values[sorted_idx]
-        
-        y_pos = np.arange(len(feature_names))
-        colors = ['#ff4b4b' if v < 0 else '#2e8b57' for v in importance_values]
-        ax.barh(y_pos, importance_values, color=colors)
-        
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels(feature_names)
-        ax.set_xlabel('SHAP Impact')
-        ax.set_title('Feature Importance Analysis')
-        ax.grid(True, axis='x', linestyle='--', alpha=0.3)
-        
-        plt.tight_layout()
-        return True, fig
-        
-    except Exception as e:
-        return False, f"Error generating explanation: {str(e)} ({type(e).__name__})"
-
-**Explication :**
-
-Conversion des données en DataFrame et réorganisation selon les features du modèle.
-Calcul des SHAP values avec explainer.shap_values(df, check_additivity=False).
-
-**Visualisation :**
-
-Trie les features par importance.
-Génère un bar plot où les valeurs positives et négatives sont colorées différemment.
-Gestion des erreurs : En cas d’échec, renvoie un message d’erreur.
-
-### **5. Configuration de la page**
-
-st.set_page_config(
-    page_title="Bone Marrow Transplant Prediction",
-    page_icon="🏥",
-    layout="wide"
-)
-
-**Explication :**
-
-Définit le titre, l'icône et la mise en page large pour Streamlit.
-
-### **6. Personnalisation CSS**
-
-st.markdown("""
-    <style>
-    .main { padding: 2rem; }
-    .stButton>button { width: 100%; margin-top: 1rem; }
-    </style>
-""", unsafe_allow_html=True)
-
-**Explication :**
-
-Ajoute du CSS personnalisé pour améliorer l’apparence des boutons et marges.
-
-### **7. Barre latérale pour la saisie des données**
-
-st.sidebar.title("Patient Information")
-st.sidebar.markdown("---")
-
-**Explication :**
-
-Ajoute un titre et une ligne de séparation dans la barre latérale.
-
-### **8. Formulaire des informations patient**
-
-age = st.number_input("Age (years)", min_value=0, max_value=18, value=5)
-gender = st.selectbox("Gender", ["Male", "Female"])
-weight = st.number_input("Weight (kg)", min_value=1, max_value=100, value=20)
-
-disease_status = st.selectbox("Disease Status", ["Early", "Intermediate", "Advanced"])
-donor_age = st.number_input("Donor Age", min_value=0, max_value=100, value=30)
-donor_relation = st.selectbox("Donor Relation", ["Sibling", "Parent", "Child", "Other Related", "Unrelated"])
-
-**Explication :**
-
-Les utilisateurs remplissent l’âge, le poids, le statut de la maladie, etc.
-
-### **9. Prédiction et affichage des résultats**
-
-if st.button('Generate Prediction'):
-    try:
-        prediction, prediction_proba = predict_success_rate(input_data)
-        outcome = "Success" if prediction[0] == 1 else "Failure"
-        success_rate = prediction_proba[0][1]
-        
-        st.metric("Predicted Outcome", outcome)
-        st.metric("Success Probability", f"{success_rate:.1%}")
-        
-        with st.expander("See Feature Importance"):
-            success, result = generate_shap_explanation(input_data)
-            if success:
-                st.pyplot(result)
-            else:
-                st.error(result)
-                
-    except Exception as e:
-        st.error(f"An error occurred during prediction: {str(e)}")
-
-**Explication :**
-
-Lorsque l'utilisateur clique sur le bouton, la fonction predict_success_rate() est appelée.
-Affiche le résultat de la prédiction sous forme de métrique.
-Ajoute une explication SHAP dans une section repliable (st.expander()).
-
-### **10. Footer**
-
-st.markdown("---")
-st.markdown("""
-    <div style='text-align: center'>
-        <small>This tool is for research purposes only. Always consult with medical professionals for clinical decisions.</small>
-    </div>
-""", unsafe_allow_html=True)
-
-**Explication :**
-
-Ajoute un message de mise en garde en bas de la page.
+# Bone Marrow Transplant Success Prediction System
+
+A machine learning-based web application that predicts bone marrow transplant success probability and provides interpretable results through SHAP analysis.
+
+---
+
+## Overview
+
+This project aims to help medical professionals assess bone marrow transplant success likelihood by analyzing patient and donor characteristics. The system uses advanced machine learning techniques and provides transparent explanations of its predictions.
+
+---
+## Project Team
+
+- Imad BAGHDAD
+- Mohamed AIT LHOUARI
+- Mohammed-Nour ATTOUBI
+- Hamza BEN-ADDI
+
+---
+
+## Dataset Description
+
+Our analysis is based on a dataset containing:
+- 541 bone marrow transplant cases
+- 36 clinical features including:
+  - Patient demographics
+  - Donor characteristics
+  - HLA matching information
+  - Clinical parameters
+- Binary outcome (success/failure)
+
+
+```
+
+## Model Development Process
+
+### 1. Data Preprocessing (notebooks/eda.ipynb)
+- Missing value imputation using mean strategy
+- Winsorization for outlier treatment
+- Class imbalance handling using SMOTE
+
+### 2. Feature Selection (notebooks/eda2.ipynb)
+- Correlation analysis
+- Clinical relevance consideration
+- SHAP-based feature importance
+
+### 3. Model Training
+- Cross-validation implementation
+- Hyperparameter optimization
+- Model comparison and selection
+
+## Model Evaluation
+### Comparaison between models
+image
+###Best performing model: 
+
+Random Forest with SMOTE
+- AUC-ROC                   0.983193
+- Balanced Accuracy         0.911765
+- Precision                      1.0
+- Recall                    0.823529
+- F1-Score                  0.903226
+
+---
+## Usage
+-Change the path of these two:
+```python
+	model = joblib.load(r'YOUR_PATH\bone_marrow_transplant\models\rf_model_compressed.joblib')
+	explainer = joblib.load(r'YOUR_PATH\bone_marrow_transplant\models\shap_explainer_new.joblib')
+```
+-Start the web application:
+```bash
+streamlit run codes/interface.py
+```
+
+The interface allows users to:
+- Input patient and donor characteristics
+- Get success probability prediction
+- View feature importance analysis
+- Explore SHAP explanations
+
+---
+
+## Technologies Used
+
+- Python 3.9+
+- Streamlit
+- scikit-learn
+- XGBoost
+- SHAP
+- Pandas/NumPy
+- Matplotlib/Seaborn
 
 
 
