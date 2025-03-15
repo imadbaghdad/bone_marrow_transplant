@@ -30,7 +30,7 @@ Our analysis is based on a dataset containing:
 - Binary outcome (success/failure)
 
 
-```
+
 
 ## Model Development Process
 
@@ -51,7 +51,7 @@ Our analysis is based on a dataset containing:
 
 ## Model Evaluation
 ### Comparaison between models
-image
+![Model Comparison](notebooks/visualisations/comparaison.png)
 ###Best performing model: 
 
 Random Forest with SMOTE
@@ -65,8 +65,8 @@ Random Forest with SMOTE
 ## Usage
 -Change the path of these two:
 ```python
-	model = joblib.load(r'YOUR_PATH\bone_marrow_transplant\models\rf_model_compressed.joblib')
-	explainer = joblib.load(r'YOUR_PATH\bone_marrow_transplant\models\shap_explainer_new.joblib')
+	model = joblib.load(r'YOUR_PATH\models\rf_model_compressed.joblib')
+	explainer = joblib.load(r'YOUR_PATH\models\shap_explainer_new.joblib')
 ```
 -Start the web application:
 ```bash
