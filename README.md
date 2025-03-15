@@ -52,7 +52,7 @@ Our analysis is based on a dataset containing:
 ## Model Evaluation
 ### Comparaison between models
 ![Model Comparison](notebooks/visualisations/comparaison.png)
-###Best performing model: 
+
 
 Random Forest with SMOTE
 - AUC-ROC                   0.983193
