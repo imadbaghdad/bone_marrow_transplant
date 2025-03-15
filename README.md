@@ -346,6 +346,4 @@ Le **Prompt Engineering** a permis d'améliorer l’analyse et l'interprétation
 
 En conclusion, le **Prompt Engineering** a amélioré la clarté des analyses et a permis une meilleure interprétation des résultats pour la transplantation de moelle osseuse.
 
----
 
-Ce document fournit des réponses détaillées et précises aux questions essentielles sur le projet.
