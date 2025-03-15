@@ -39,7 +39,7 @@ jobs:
     
     - name: Install remaining requirements
       run: |
-        pip install -r tests/requirements.txt
+        pip install -r requirements.txt
         
     - name: List installed packages
       run: |
