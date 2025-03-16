@@ -62,6 +62,57 @@ Random Forest with SMOTE
 - F1-Score                  0.903226
 
 ---
+## Interface
+
+### Web Application Features
+- **User-Friendly Input Form:**
+  - Patient demographics
+  - Donor characteristics
+  - Clinical parameters
+  - HLA matching information
+
+- **Prediction Results:**
+  - Success probability
+  - Confidence score
+  - Risk factors identification
+
+- **Visualization Components:**
+  - SHAP feature importance plot
+  - Impact percentage for each factor
+  - Interactive explanations
+
+### Screenshot
+![Web Interface](notebooks\visualisations\interface_ss.png)
+---
+## Automated Tests
+
+### Test Coverage
+The project includes comprehensive test suites:
+
+1. **Data Validation Tests**
+   - Missing values checks
+   - Data type verification
+   - Value range validation
+   - Categorical value checks
+
+2. **Model Tests**
+   - Prediction functionality
+   - SHAP explanation generation
+   - Feature importance calculation
+   - Input preprocessing
+
+3. **Interface Tests**
+   - Input validation
+   - Error handling
+   - Visualization generation
+   - Response formatting
+
+### Running Tests
+Execute the test suite using:
+```bash
+python -m pytest tests/ -v
+```
+
 ## Usage
 -Change the path of these two:
 ```python
