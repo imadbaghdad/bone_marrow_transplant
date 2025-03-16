@@ -82,7 +82,7 @@ Random Forest with SMOTE
   - Interactive explanations
 
 ### Screenshot
-![Web Interface](notebooks\visualisations\interface_ss.png)
+![Web Interface](notebooks/visualisations/interface_ss.png)
 ---
 ## Automated Tests
 
