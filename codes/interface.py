@@ -4,11 +4,17 @@ import numpy as np
 import joblib
 import shap
 import matplotlib.pyplot as plt
+import os
+from pathlib import Path
+
+# Use environment variables for model paths
+MODEL_PATH = os.getenv('MODEL_PATH', str(Path(__file__).parent.parent / 'models' / 'rf_model_compressed.joblib'))
+EXPLAINER_PATH = os.getenv('EXPLAINER_PATH', str(Path(__file__).parent.parent / 'models' / 'shap_explainer_new.joblib'))
 
 # Load the trained model and SHAP explainer
 try:
-    model = joblib.load(r'C:\Users\imadb\Documents\GitHub\bone_marrow_transplant\models\rf_model_compressed.joblib')
-    explainer = joblib.load(r'C:\Users\imadb\Documents\GitHub\bone_marrow_transplant\models\shap_explainer_new.joblib')
+    model = joblib.load(MODEL_PATH)
+    explainer = joblib.load(EXPLAINER_PATH)
 except FileNotFoundError:
     st.error("Model files not found. Please ensure the model files are in the correct location.")
     st.stop()
